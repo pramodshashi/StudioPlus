@@ -346,7 +346,7 @@
         let html = `
             <div style="margin-bottom: 10px;">
                 <h5 style="margin-bottom:10px;">Order Type: <strong>${orderType}</strong></h5>
-                <button id="addnew" onClick="addnew_ss('${orderkey}')" type="button" class="btn btn-info" style="font-size:15px;">+ Add New Item</button>
+                <button id="addnew" onClick="addnew_ss('${orderkey}', '${orderType}')" type="button" class="btn btn-info" style="font-size:15px;">+ Add New Item</button>
             </div>
             <table id="itemtable" class="table table-bordered">
                 <thead>
@@ -398,7 +398,7 @@
                             </button>
                             <button style="display:none" id="saveBtn_${orderitem.ssorderitemmapkey}"
                                 type="button" class="btn btn-save save-order"title="Save"
-                                onClick="saveitem(${orderitem.ssorderitemmapkey},'${orderitem.order.order_type.ordertype}',${orderitem.order.order_type.ordertypekey},${orderitem.order_type_item.ordertypeitemkey},'${orderitem.lam_type?.lamtypekey || ''}',${orderitem.order.customerkey},${orderitem.order.isurgent},'${orderitem.order.discount}','${orderitem.order.paidcost}',${orderitem.order.studiokey},'${orderitem.order.orderid}','${orderitem.order.deliverydate}','${orderitem.order.remarks}')">
+                                onClick="saveitem('${orderitem.jobid}',${orderitem.ssorderitemmapkey},'${orderitem.order.order_type.ordertype}',${orderitem.order.order_type.ordertypekey},${orderitem.order_type_item.ordertypeitemkey},'${orderitem.lam_type?.lamtypekey || ''}',${orderitem.order.customerkey},${orderitem.order.isurgent},'${orderitem.order.discount}','${orderitem.order.paidcost}',${orderitem.order.studiokey},'${orderitem.order.orderid}','${orderitem.order.deliverydate}','${orderitem.order.remarks}')">
                                 <i class="fas fa-save"></i>
                             </button>
                             <button id="dltBtn_${orderitem.ssorderitemmapkey}" class="btn btn-delete remove-order" data-orderid="${orderitem.orderkey}" data-id="${orderitem.ssorderitemmapkey}" data-type="${orderitem.order.order_type.ordertype}"><i class="fas fa-trash"></i></button>
@@ -459,7 +459,7 @@
             </div>`;
     }
 
-    function saveitem(ssorderitemmapkey, ordertype, ordertypekey, ordertypeitemkey, lamtypekey, customerkey, isurgent, discount, paidcost, studiokey, orderid, deliverydate, remarks) {
+    function saveitem(jobid,ssorderitemmapkey, ordertype, ordertypekey, ordertypeitemkey, lamtypekey, customerkey, isurgent, discount, paidcost, studiokey, orderid, deliverydate, remarks) {
         dataarray=[]
 
         setTimeout(() => {
@@ -482,6 +482,7 @@
             console.log("Soft Copy:", scopy);
             console.log("Edit Type:", edittype);
             let dataarray = {
+                jobid:jobid,
                 studiokey: studiokey,
                 orderid: orderid,
                 ordertypekey: ordertypekey,
@@ -567,7 +568,7 @@
         }, 300);
     }
 
-    function addnew_ss(orderkey){
+    function addnew_ss(orderkey,orderType){
         if (!orderkey) {
             alert("Order key is missing!");
             return;
@@ -629,7 +630,7 @@
         statuscell.innerHTML = '';
 
         actioncell.innerHTML = `
-            <button id="addBtn" type="button" class="btn btn-primary" onClick="additem(this)" data-orderkey="${orderkey}">
+            <button id="addBtn" type="button" class="btn btn-primary" onClick="additem(this)" data-orderkey="${orderkey}" data-ordertype="${orderType}">
                 Add
             </button>
         `;
@@ -638,6 +639,8 @@
 
     function additem(btn) {
         let orderkey = btn.getAttribute("data-orderkey");
+        let orderType = btn.getAttribute("data-ordertype");
+        alert(orderType)
         // Get the row (parent of the button)
         let row = btn.closest("tr");
 
@@ -662,7 +665,7 @@
                 if (!response || response.length === 0) {
                     console.log("No order items returned from server.");
                 } else {
-                    console.log('data call working ...............')
+                    console.log('data call working yyyyyyyyyy...............',response)
                     createitem_ss(response,{ orderkey, hcopy, scopy, edittype, item});
                 }
             }
@@ -670,6 +673,7 @@
     }
 
     function createitem_ss(orderdata,formData) {
+        console.log('item create ss ...............',formData)
         if (!orderdata.orderItems.length) {
             $('#orderitemResults').html(
                 // '<div class="alert alert-info">No Order Items found.</div>'
@@ -678,10 +682,11 @@
         }
 
         let orderdetail=orderdata.orderItems[0];
-
+        console.log('item create ss ...............',orderdetail)
         //dataarray=[]
 
         let dataarray = {
+            jobid: orderdetail.jobid,
             studiokey: orderdetail.order.studiokey,
             orderid: orderdetail.order.orderid,
             ordertypekey: orderdetail.order.ordertypekey,
@@ -709,7 +714,7 @@
                     console.log("Order Item Created Successfully:", response);
 
                     setTimeout(() => {
-                        loaditemdata_SS(formData.orderkey);
+                        loaditemdata_SS(formData.orderkey,orderdetail.order.order_type.ordertype);
                         $('orderviewmodal_All').modal('show');
                     }, 500);
 
